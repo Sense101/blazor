@@ -3,23 +3,49 @@
 
 <h1>Available Products</h1>
 
+<input type="text" @bind-value="_newProductName">
+<input type="number" @bind-value="_newProductPrice">
+<button @onclick="AddProduct">Add New Product</button>
+<br><br>
+
 <ul>
     @foreach (Product product in _products)
     {
-        <li>@product.Name <button @onclick="() => AddToBasket(product)">Add</button></li>
+        <li>
+            @product.Name
+            <button @onclick="() => AddToBasket(product)">Add To Basket</button>
+            <button @onclick="() => RemoveProduct(product)">Remove from database</button>
+            @($"£{product.Price.ToString("0.00")}")
+        </li>
     }
 </ul>
+
+<h1>Basket</h1>
+
+<p>Total price: @_totalPrice</p>
 
 <ul>
     @foreach (BasketItem item in _items)
     {
-        <li>@item.Product.Name <button @onclick="() => RemoveFromBasket(item)">Remove</button></li>
+        <li>
+            @item.Product.Name (@item.Quantity)
+            <button @onclick="() => RemoveFromBasket(item)">Remove from basket</button>
+            @if (item.Quantity > 1)
+            {
+                <button @onclick="() => RemoveOne(item)">Remove one</button>
+            }
+            @($"£{item.Product.Price.ToString("0.00")}")
+        </li>
     }
 </ul>
 
 @code {
     // not sure if this deserves a _ at the start or not
     private AppDbContext db = new();
+
+    private string _newProductName = "";
+    private float _newProductPrice = 0;
+    private string _totalPrice = "£0.00";
 
     private List<Product> _products = new();
     private List<BasketItem> _items = new();
@@ -28,34 +54,105 @@
     {
         _products = db.Products.ToList();
         _items = db.BasketItems.ToList();
+
+        UpdateTotal();
+    }
+
+    private void AddProduct()
+    {
+        if (_newProductName == "") return;
+        if (_newProductPrice <= 0) return;
+
+        // create a new product entity
+        Product newProduct = new Product { Name = _newProductName, Price = _newProductPrice };
+        _newProductName = "";
+        _newProductPrice = 0;
+
+        db.Products.Add(newProduct);
+        db.SaveChanges();
+
+        // update local products afterwards, because otherwise an Id won't be assigned yet.
+        _products = db.Products.ToList();
+    }
+
+    private void RemoveProduct(Product product)
+    {
+        if (product.BasketItems.Count > 0)
+        {
+            Console.WriteLine("cannot remove product from database - has basket item dependency");
+            return;
+        }
+
+        // no need to pull the list of products from the database again
+        _products.Remove(product);
+
+        // this was a bit confusing, but it seems deleting entities from a list won't remove them from the database
+        db.Products.Remove(product);
+
+        UpdateTotal();
+        db.SaveChanges();
     }
 
     private void AddToBasket(Product product)
     {
-        // create a new basket item
-        BasketItem newItem = new BasketItem { Product = product, ProductId = product.Id, Quantity = 1 };
+        if (product.BasketItems.Count > 0)
+        {
+            // this isn't a realistic usage of quantity, but it works
+            product.BasketItems.First().Quantity++;
+        }
+        else
+        {
+            // create a new basket item entity
+            BasketItem newItem = new BasketItem { Product = product, ProductId = product.Id, Quantity = 1 };
 
-        Console.WriteLine(product.Id);
+            Console.WriteLine($"Adding product to basket, id: {product.Id}");
 
-        // add a reference for it to the product
-        product.BasketItems.Add(newItem);
+            // add a reference for it to the product
+            product.BasketItems.Add(newItem);
 
-        // add the new basket item
-        _items.Add(newItem);
-        db.BasketItems.Add(newItem);
+            // add the new basket item to local and the database
+            _items.Add(newItem);
+            db.BasketItems.Add(newItem);
+        }
 
+        UpdateTotal();
         db.SaveChanges(); // should save changes to the product as well
     }
 
     private void RemoveFromBasket(BasketItem item)
     {
-        // remove the reference
-        item.Product.BasketItems.Remove(item);
+        if (item.Quantity > 1)
+
+            // remove the reference
+            item.Product.BasketItems.Remove(item);
 
         // remove the item
         _items.Remove(item);
+
         db.BasketItems.Remove(item);
 
-        db.SaveChanges(); // should save changes to the product as well
+        UpdateTotal();
+        db.SaveChanges();
+    }
+
+    private void RemoveOne(BasketItem item)
+    {
+        if (item.Quantity < 2) return;
+
+        item.Quantity--;
+
+        UpdateTotal();
+        db.SaveChanges();
+    }
+
+    private void UpdateTotal()
+    {
+        float total = 0;
+        foreach (BasketItem item in _items)
+        {
+            total += item.Product.Price * item.Quantity;
+        }
+
+        _totalPrice = $"£{total.ToString("0.00")}";
     }
 }
