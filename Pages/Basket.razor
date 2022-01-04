@@ -1,0 +1,61 @@
+@using Blazor.Models
+@page "/basket"
+
+<h1>Available Products</h1>
+
+<ul>
+    @foreach (Product product in _products)
+    {
+        <li>@product.Name <button @onclick="() => AddToBasket(product)">Add</button></li>
+    }
+</ul>
+
+<ul>
+    @foreach (BasketItem item in _items)
+    {
+        <li>@item.Product.Name <button @onclick="() => RemoveFromBasket(item)">Remove</button></li>
+    }
+</ul>
+
+@code {
+    // not sure if this deserves a _ at the start or not
+    private AppDbContext db = new();
+
+    private List<Product> _products = new();
+    private List<BasketItem> _items = new();
+
+    protected override void OnInitialized()
+    {
+        _products = db.Products.ToList();
+        _items = db.BasketItems.ToList();
+    }
+
+    private void AddToBasket(Product product)
+    {
+        // create a new basket item
+        BasketItem newItem = new BasketItem { Product = product, ProductId = product.Id, Quantity = 1 };
+
+        Console.WriteLine(product.Id);
+
+        // add a reference for it to the product
+        product.BasketItems.Add(newItem);
+
+        // add the new basket item
+        _items.Add(newItem);
+        db.BasketItems.Add(newItem);
+
+        db.SaveChanges(); // should save changes to the product as well
+    }
+
+    private void RemoveFromBasket(BasketItem item)
+    {
+        // remove the reference
+        item.Product.BasketItems.Remove(item);
+
+        // remove the item
+        _items.Remove(item);
+        db.BasketItems.Remove(item);
+
+        db.SaveChanges(); // should save changes to the product as well
+    }
+}
