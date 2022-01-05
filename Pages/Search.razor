@@ -14,33 +14,35 @@
 @if (_currentSearch != "")
 {
     <p>You searched for: @_currentSearch</p>
+
+    if (_products.Count > 0)
+    {
+        <p>Results:</p>
+        <ul>
+            @foreach (Product product in _products)
+            {
+                <li>
+                    @product.Name
+                    <br>
+                    @($"£{product.Price.ToString("0.00")}")
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No results found!</p>
+    }
 }
 
-@if (_products.Count > 0)
-{
-    <p>Results:</p>
-    <ul>
-        @foreach (Product product in _products)
-        {
-            <li>
-                @product.Name
-                <br>
-                @($"£{product.Price.ToString("0.00")}")
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No results found!</p>
-}
+
 
 
 @code {
     private AppDbContext db = new();
 
-    private string _searchFilter;
-    private string _currentSearch;
+    private string _searchFilter = "";
+    private string _currentSearch = "";
     private List<Product> _products = new();
 
     private async void SearchDatabase()
