@@ -1,0 +1,61 @@
+@page "/search"
+@using Blazor.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Search</PageTitle>
+
+<h1>Search the Database for Products</h1>
+
+<input type="text" placeholder="Search by name..." @bind-value="_searchFilter">
+<button @onclick="SearchDatabase">Search</button>
+
+<h1>Results</h1>
+
+@if (_currentSearch != "")
+{
+    <p>You searched for: @_currentSearch</p>
+}
+
+@if (_products.Count > 0)
+{
+    <p>Results:</p>
+    <ul>
+        @foreach (Product product in _products)
+        {
+            <li>
+                @product.Name
+                <br>
+                @($"£{product.Price.ToString("0.00")}")
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No results found!</p>
+}
+
+
+@code {
+    private AppDbContext db = new();
+
+    private string _searchFilter;
+    private string _currentSearch;
+    private List<Product> _products = new();
+
+    private async void SearchDatabase()
+    {
+        if (_searchFilter == "") { return; }
+
+        _currentSearch = _searchFilter;
+        _searchFilter = "";
+
+        _products = await (
+        from product in db.Products
+        where product.Name.Contains(_currentSearch)
+        select product
+        ).ToListAsync();
+
+
+    }
+}
