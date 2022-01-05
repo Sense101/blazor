@@ -9,23 +9,3 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
-
-@code {
-    protected override void OnInitialized()
-    {
-        using (AppDbContext db = new())
-        {
-            //Console.WriteLine("Adding a new product");
-            //db.Products.Add(new Product { Name = "Test Product" });
-            //
-            //db.SaveChanges();
-
-            Product product = db.Products.FirstOrDefault();
-
-            Console.WriteLine($"Description: {product.Description}");
-
-
-            product.Description = "new description 2 - yay!";
-        }
-    }
-}

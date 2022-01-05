@@ -1,0 +1,57 @@
+@using Blazor.Models
+@page "/basket"
+
+<PageTitle>Basket</PageTitle>
+
+<h1>Add a Product</h1>
+
+<EditForm Model="@_newProduct" OnValidSubmit="@AddProduct">
+    Name: <InputText @bind-Value="_newProduct.Name"></InputText>
+    Price: <InputNumber @bind-Value="_newProduct.Price" min="0"></InputNumber>
+
+    <button type="submit">Add To Database</button>
+</EditForm>
+
+<h1>Available Products</h1>
+
+<ul>
+    @foreach (Product product in _products)
+    {
+        <li>
+            @product.Name
+            <button @onclick="() => AddToBasket(product)">Add To Basket</button>
+            <button @onclick="() => RemoveProduct(product)">Remove from database</button>
+            @($"£{product.Price.ToString("0.00")}")
+        </li>
+    }
+</ul>
+
+<label for="addAmount">Amount to add: </label> <input type="number" id="addAmount" @bind-value="_newProductAmount"
+    min="1">
+
+<h1>Basket</h1>
+
+<p>Total price: @_basket.TotalPrice</p>
+
+<ul>
+    @foreach (BasketItem item in _basketItems)
+    {
+        <li>
+            @item.Product.Name (@item.Quantity)
+
+            @if (item.Quantity < 2)
+            {
+                <button @onclick="() => RemoveFromBasket(item)">Remove</button>
+            }
+            else
+            {
+                <button @onclick="() => RemoveFromBasket(item)">Remove All</button>
+
+                <button @onclick="() => RemoveAmount(item, item.RemoveAmount)">Remove </button>
+                <input type="number" min="1" max="@item.Quantity" @bind-value="item.RemoveAmount">
+            }
+
+            @($"£{item.Product.Price.ToString("0.00")}")
+        </li>
+    }
+</ul>

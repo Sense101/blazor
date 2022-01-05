@@ -4,6 +4,7 @@ namespace Blazor.Models;
 
 public class AppDbContext : DbContext
 {
+    public DbSet<Basket> Baskets { get; set; }
     public DbSet<BasketItem> BasketItems { get; set; }
     public DbSet<Product> Products { get; set; }
 
