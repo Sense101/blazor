@@ -6,7 +6,8 @@
 
 <h1>Search the Database for Products</h1>
 
-<input type="text" placeholder="Search by name..." @bind-value="_searchFilter">
+<input type="text" placeholder="Search by name..." @bind-value="_nameFilter">
+<input type="text" placeholder="Search by description..." @bind-value="_descFilter">
 <button @onclick="SearchDatabase">Search</button>
 
 <h1>Results</h1>
@@ -22,8 +23,8 @@
             @foreach (Product product in _products)
             {
                 <li>
-                    @product.Name
-                    <br>
+                    @product.Name <br>
+                    @product.Description <br>
                     @($"£{product.Price.ToString("0.00")}")
                 </li>
             }
@@ -35,29 +36,27 @@
     }
 }
 
-
-
-
 @code {
     private AppDbContext db = new();
 
-    private string _searchFilter = "";
+    private string _nameFilter = "";
+    private string _descFilter = "";
     private string _currentSearch = "";
     private List<Product> _products = new();
 
     private async void SearchDatabase()
     {
-        if (_searchFilter == "") { return; }
+        if (_nameFilter == "" && _descFilter == "") { return; }
 
-        _currentSearch = _searchFilter;
-        _searchFilter = "";
+        string currentName = _nameFilter != "" ? $"Name: {_nameFilter}." : "";
+        string currentDesc = _descFilter != "" ? $"Description: {_descFilter}." : "";
+        _currentSearch = currentName + " " + currentDesc;
 
         _products = await (
         from product in db.Products
-        where product.Name.Contains(_currentSearch)
+        where product.Name.Contains(_nameFilter)
+        where product.Description.Contains(_descFilter)
         select product
         ).ToListAsync();
-
-
     }
 }

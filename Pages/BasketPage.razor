@@ -6,8 +6,9 @@
 <h1>Add a Product</h1>
 
 <EditForm Model="@_newProduct" OnValidSubmit="@AddProduct">
-    Name: <InputText @bind-Value="_newProduct.Name"></InputText>
-    Price: <InputNumber @bind-Value="_newProduct.Price" min="0"></InputNumber>
+    Name: <InputText @bind-Value="_newProduct.Name"></InputText> <br>
+    Description: <InputTextArea @bind-Value="_newProduct.Description"></InputTextArea> <br>
+    Price: <InputNumber @bind-Value="_newProduct.Price" min="0"></InputNumber> <br>
 
     <button type="submit">Add To Database</button>
 </EditForm>
@@ -18,7 +19,8 @@
     @foreach (Product product in _products)
     {
         <li>
-            @product.Name
+            @product.Name <br>
+            @product.Description <br>
             <button @onclick="() => AddToBasket(product)">Add To Basket</button>
             <button @onclick="() => RemoveProduct(product)">Remove from database</button>
             @($"£{product.Price.ToString("0.00")}")
@@ -37,7 +39,8 @@
     @foreach (BasketItem item in _basketItems)
     {
         <li>
-            @item.Product.Name (@item.Quantity)
+            @item.Product.Name (@item.Quantity)<br>
+            @item.Product.Description <br>
 
             @if (item.Quantity < 2)
             {
