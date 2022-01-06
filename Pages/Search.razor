@@ -54,8 +54,8 @@
 
         _products = await (
         from product in db.Products
-        where product.Name.Contains(_nameFilter)
-        where product.Description.Contains(_descFilter)
+        where product.Name.ToLower().Contains(_nameFilter.ToLower())
+        where product.Description.ToLower().Contains(_descFilter.ToLower())
         select product
         ).ToListAsync();
     }
