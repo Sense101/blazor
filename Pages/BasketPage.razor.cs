@@ -12,11 +12,11 @@ namespace Blazor.Pages
 
         [Parameter]
         [SupplyParameterFromQuery(Name = "name-filter")]
-        public string _nameFilter { get; set; } = "";
+        public string _nameFilter { get; set; }
 
         [Parameter]
         [SupplyParameterFromQuery(Name = "desc-filter")]
-        public string _descFilter { get; set; } = "";
+        public string _descFilter { get; set; }
 
         // I would prefer to have an input within each product but that would require binding new variables to each product in the list -- This could be done
         private int _newItemAmount = 1;
@@ -27,21 +27,15 @@ namespace Blazor.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            // this works fine EXCEPT when there is a query already in the url. For some reason the list of products is then never set properly
-            _products = await (
-            from product in db.Products
-            where product.Name.ToLower().Contains(_nameFilter.ToLower())
-            where product.Description.ToLower().Contains(_descFilter.ToLower())
-            select product
-            ).ToListAsync();
+            if (_nameFilter == null) { _nameFilter = ""; }
+            if (_descFilter == null) { _descFilter = ""; }
+
+            _products = await db.Products.Where(p => p.Name.ToLower().Contains(_nameFilter.ToLower()) && p.Description.ToLower().Contains(_descFilter.ToLower())).ToListAsync();
 
 
             // since there is only one basket in the database for now, I don't have a way of choosing which one is ours
             _basket = await db.Baskets.Include(b => b.BasketItems).FirstOrDefaultAsync();
-            if (_basket != null)
-            {
-                _basketItems = _basket.BasketItems;
-            }
+            _basketItems = await db.BasketItems.Include(b => b.Product).ToListAsync();
         }
 
         private async void AddToBasket(Product product)
