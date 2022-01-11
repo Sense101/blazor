@@ -5,12 +5,13 @@
 
 <h1>Available Products</h1>
 
-<EditForm Model="_searchInput" OnValidSubmit="SearchDatabase">
+<div>
     <span>Filter: </span>
-    <InputText @bind-Value="_searchInput.NameFilter" placeholder="Filter by name..."></InputText>
-    <InputText @bind-Value="_searchInput.DescFilter" placeholder="Filter by description..."></InputText>
-    <button type="submit">Search</button>
-</EditForm><br>
+    <input type="text" placeholder="Filter by name..." @bind-value="_nameFilter">
+    <input type="text" placeholder="Filter by description..." @bind-value="_descFilter">
+    <button type="submit" @onclick="SearchDatabase">Search</button>
+</div><br>
+
 @if (_products.Count > 0)
 {
     <ul>

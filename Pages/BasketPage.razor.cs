@@ -1,5 +1,4 @@
 using Blazor.Models;
-using Blazor.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.WebUtilities;
@@ -11,7 +10,13 @@ namespace Blazor.Pages
         [Inject] AppDbContext db { get; set; }
         [Inject] NavigationManager navManager { get; set; }
 
-        private SearchInput _searchInput = new();
+        [Parameter]
+        [SupplyParameterFromQuery(Name = "name-filter")]
+        public string _nameFilter { get; set; } = "";
+
+        [Parameter]
+        [SupplyParameterFromQuery(Name = "desc-filter")]
+        public string _descFilter { get; set; } = "";
 
         // I would prefer to have an input within each product but that would require binding new variables to each product in the list -- This could be done
         private int _newItemAmount = 1;
@@ -22,24 +27,11 @@ namespace Blazor.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            // get a proper uri
-            Uri uri = new(navManager.Uri);
-            Dictionary<string, Microsoft.Extensions.Primitives.StringValues> queries = QueryHelpers.ParseQuery(uri.Query);
-
-            if (queries.TryGetValue("name-filter", out var nameFilter))
-            {
-                _searchInput.NameFilter = nameFilter.ToString();
-            }
-            if (queries.TryGetValue("desc-filter", out var descFilter))
-            {
-                _searchInput.DescFilter = descFilter.ToString();
-            }
-
             // this works fine EXCEPT when there is a query already in the url. For some reason the list of products is then never set properly
             _products = await (
             from product in db.Products
-            where product.Name.ToLower().Contains(_searchInput.NameFilter.ToLower())
-            where product.Description.ToLower().Contains(_searchInput.DescFilter.ToLower())
+            where product.Name.ToLower().Contains(_nameFilter.ToLower())
+            where product.Description.ToLower().Contains(_descFilter.ToLower())
             select product
             ).ToListAsync();
 
@@ -123,13 +115,13 @@ namespace Blazor.Pages
         {
             Dictionary<string, string> query = new();
 
-            if (_searchInput.NameFilter != "")
+            if (_nameFilter != "")
             {
-                query.Add("name-filter", _searchInput.NameFilter);
+                query.Add("name-filter", _nameFilter);
             }
-            if (_searchInput.DescFilter != "")
+            if (_descFilter != "")
             {
-                query.Add("desc-filter", _searchInput.DescFilter);
+                query.Add("desc-filter", _descFilter);
             }
 
             // for some reason navManager.Uri isn't an full uri, so make one
@@ -139,8 +131,8 @@ namespace Blazor.Pages
 
             _products = await (
             from product in db.Products
-            where product.Name.ToLower().Contains(_searchInput.NameFilter.ToLower())
-            where product.Description.ToLower().Contains(_searchInput.DescFilter.ToLower())
+            where product.Name.ToLower().Contains(_nameFilter.ToLower())
+            where product.Description.ToLower().Contains(_descFilter.ToLower())
             select product
             ).ToListAsync();
         }
