@@ -1,99 +1,100 @@
-using Microsoft.EntityFrameworkCore;
 using Blazor.Models;
+using Blazor.Data;
+using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Blazor.Pages
 {
     public partial class BasketPage
     {
-        private AppDbContext db = new();
-        private Product _newProduct = new();
+        [Inject] AppDbContext db { get; set; }
+        [Inject] NavigationManager navManager { get; set; }
 
-        // I would prefer to have an input within each product but that would require binding new variables to each prodcut in the list
-        private int _newProductAmount = 1;
+        private SearchInput _searchInput = new();
 
+        // I would prefer to have an input within each product but that would require binding new variables to each product in the list -- This could be done
+        private int _newItemAmount = 1;
 
         private Basket _basket;
         private List<Product> _products = new();
         private List<BasketItem> _basketItems = new();
+
         protected override async Task OnInitializedAsync()
         {
-            _products = await db.Products.ToListAsync();
+            // get a proper uri
+            Uri uri = new(navManager.Uri);
+            Dictionary<string, Microsoft.Extensions.Primitives.StringValues> queries = QueryHelpers.ParseQuery(uri.Query);
+
+            if (queries.TryGetValue("name-filter", out var nameFilter))
+            {
+                _searchInput.NameFilter = nameFilter.ToString();
+            }
+            if (queries.TryGetValue("desc-filter", out var descFilter))
+            {
+                _searchInput.DescFilter = descFilter.ToString();
+            }
+
+            // this works fine EXCEPT when there is a query already in the url. For some reason the list of products is then never set properly
+            _products = await (
+            from product in db.Products
+            where product.Name.ToLower().Contains(_searchInput.NameFilter.ToLower())
+            where product.Description.ToLower().Contains(_searchInput.DescFilter.ToLower())
+            select product
+            ).ToListAsync();
+
 
             // since there is only one basket in the database for now, I don't have a way of choosing which one is ours
             _basket = await db.Baskets.Include(b => b.BasketItems).FirstOrDefaultAsync();
+            if (_basket != null)
+            {
+                _basketItems = _basket.BasketItems;
+            }
+        }
 
-            // For some reason it returns an empty string for the price - even though when I pull from the db after updating it then it has the price stored.
-            //I'm not sure why this is, so I'm leaving it blank at the start till I understand why.
+        private async void AddToBasket(Product product)
+        {
+            if (_newItemAmount < 1) { return; }
 
+            // make sure there is a basket
             if (_basket == null)
             {
                 _basket = new();
                 db.Baskets.Add(_basket);
-                UpdateTotalAndSave();
             }
 
-            // no need to get the list of items from the database if we get it with the basket
-            _basketItems = _basket.BasketItems;
-
-        }
-
-        private void AddProduct()
-        {
-            // validate the inputs
-            if (_newProduct.Name == "" || _newProduct.Price <= 0) { return; }
-
-            // create a new product entity
-            db.Products.Add(_newProduct);
-            db.SaveChanges();
-
-            // now that the new product is tracked and has been given an id, add it the the local list
-            _products.Add(_newProduct);
-
-            // clear the form
-            _newProduct = new();
-        }
-
-        private void RemoveProduct(Product product)
-        {
-            if (product.BasketItems.Count > 0)
+            BasketItem existingItem = _basketItems.FirstOrDefault(item => item.Product == product);
+            if (existingItem == null)
             {
-                Console.WriteLine("cannot remove product from database - has basket item dependency");
-                return;
+                // create a new basket item entity
+                BasketItem newItem = new BasketItem { Product = product, ProductId = product.Id, Quantity = _newItemAmount };
+
+                Console.WriteLine($"Adding product to basket, id: {product.Id}");
+
+                // add the new basket item to local and the database
+                _basketItems.Add(newItem);
+                db.BasketItems.Add(newItem);
+            }
+            else
+            {
+                existingItem.Quantity += _newItemAmount;
             }
 
-            _products.Remove(product);
 
-            db.Products.Remove(product);
-
-            UpdateTotalAndSave();
+            await UpdateTotalAndSave();
         }
 
-        private void AddToBasket(Product product)
-        {
-            if (_newProductAmount < 1) { return; }
-            // create a new basket item entity
-            BasketItem newItem = new BasketItem { Product = product, ProductId = product.Id, Quantity = _newProductAmount };
-
-            Console.WriteLine($"Adding product to basket, id: {product.Id}");
-
-            // add the new basket item to local and the database
-            _basketItems.Add(newItem);
-            db.BasketItems.Add(newItem);
-
-            UpdateTotalAndSave();
-        }
-
-        private void RemoveFromBasket(BasketItem item)
+        private async void RemoveFromBasket(BasketItem item)
         {
             // remove the item
             _basketItems.Remove(item);
 
             db.BasketItems.Remove(item);
 
-            UpdateTotalAndSave();
+            await UpdateTotalAndSave();
         }
 
-        private void RemoveAmount(BasketItem item, int amount)
+        private async void RemoveAmount(BasketItem item, int amount)
         {
             int remainder = item.Quantity - amount;
             if (remainder < 1)
@@ -102,10 +103,10 @@ namespace Blazor.Pages
                 return;
             }
             item.Quantity = remainder;
-            UpdateTotalAndSave();
+            await UpdateTotalAndSave();
         }
 
-        private void UpdateTotalAndSave()
+        private async Task UpdateTotalAndSave()
         {
             float total = 0;
             foreach (BasketItem item in _basketItems)
@@ -115,9 +116,33 @@ namespace Blazor.Pages
 
             _basket.TotalPrice = $"£{total.ToString("0.00")}";
 
-            db.SaveChanges();
+            await db.SaveChangesAsync();
+        }
 
-            Console.WriteLine(db.Baskets.FirstOrDefault().TotalPrice);
+        private async void SearchDatabase()
+        {
+            Dictionary<string, string> query = new();
+
+            if (_searchInput.NameFilter != "")
+            {
+                query.Add("name-filter", _searchInput.NameFilter);
+            }
+            if (_searchInput.DescFilter != "")
+            {
+                query.Add("desc-filter", _searchInput.DescFilter);
+            }
+
+            // for some reason navManager.Uri isn't an full uri, so make one
+            Uri uri = new(navManager.Uri);
+
+            navManager.NavigateTo(QueryHelpers.AddQueryString(uri.AbsolutePath, query));
+
+            _products = await (
+            from product in db.Products
+            where product.Name.ToLower().Contains(_searchInput.NameFilter.ToLower())
+            where product.Description.ToLower().Contains(_searchInput.DescFilter.ToLower())
+            select product
+            ).ToListAsync();
         }
     }
 }

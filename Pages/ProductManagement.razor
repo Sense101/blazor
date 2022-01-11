@@ -1,0 +1,44 @@
+@page "/product-management"
+@using Blazor.Models
+
+<PageTitle>Product Management</PageTitle>
+
+<h1>Product Management</h1>
+
+<p>For adding and removing products from the database. Not for customers to use.</p>
+
+<h2>Add a new product</h2>
+
+<EditForm Model="_newProduct" OnValidSubmit="AddProduct">
+    Name: <InputText @bind-Value="_newProduct.Name"></InputText> <br>
+    Description: <InputTextArea @bind-Value="_newProduct.Description"></InputTextArea> <br>
+    Price: <InputNumber @bind-Value="_newProduct.Price" min="0"></InputNumber> <br>
+
+    <button type="submit">Add To Database</button>
+</EditForm>
+
+<br>
+<h2>Current products</h2>
+
+<ul>
+    @foreach (Product product in _products)
+    {
+        <li>
+            <span>@product.Name | </span>
+            @if (product.Description != "")
+            {
+                <span>@product.Description | </span>
+            }
+            <span>@($"£{product.Price.ToString("0.00")}") | </span>
+
+            @if (product.BasketItems.Count > 0)
+            {
+                <span>This Product is in @product.BasketItems.Count basket(s)</span>
+            }
+            else
+            {
+                <button @onclick="() => RemoveProduct(product)">Remove from database</button>
+            }
+        </li>
+    }
+</ul>

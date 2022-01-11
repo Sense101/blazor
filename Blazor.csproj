@@ -9,5 +9,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.1"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1"/>
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0"/>
   </ItemGroup>
 </Project>
