@@ -2,70 +2,90 @@
 @page "/basket"
 
 <PageTitle>Customer Basket</PageTitle>
+<link rel="stylesheet" href="/css/BasketPage.css" />
 
-<h1>Available Products</h1>
+<main id="basket-page">
+    <nav>
+        <span>
+            <input type="text" id="search-input" placeholder="Search for products..."
+                @oninput="args => SearchDatabase(args)" @bind-value="_nameFilter">
+        </span>
+        <button class="button blue" @onclick="ToggleBasket">Basket</button>
+    </nav>
 
-<div>
-    <span>Filter: </span>
-    <input type="text" placeholder="Filter by name..." @bind-value="_nameFilter">
-    <input type="text" placeholder="Filter by description..." @bind-value="_descFilter">
-    <button type="submit" @onclick="SearchDatabase">Search</button>
-</div><br>
-
-@if (_products.Count > 0)
-{
-    <ul>
-        @foreach (Product product in _products)
-        {
-            <li>
-                <span>@product.Name | </span>
-                @if (product.Description != "")
+    <div class="page">
+        <div class="center">
+            <div class="title">
+                <h1>Blazor Products Shop Inc.</h1>
+                @if (_nameFilter != "" && _nameFilter != null)
                 {
-                    <span>@product.Description | </span>
+                    <span>Results for: @_nameFilter</span>
                 }
-                <span>@($"£{product.Price.ToString("0.00")}") | </span>
-
-                <button @onclick="() => AddToBasket(product)">Add To Basket</button>
-            </li>
-        }
-    </ul>
-
-    <label for="add-amount">Amount to add: </label> <input type="number" id="add-amount" @bind-value="_newItemAmount"
-    min="1">
-}
-else
-{
-    <p>No products found!</p>
-}
+            </div>
 
 
-<h1>Basket</h1>
 
-<p>Total price: @_basket.TotalPrice</p>
-
-<!-- I'm not a fan of how messy this looks, but it's a result of mixing html with code and pretty much unavoidable-->
-<ul>
-    @foreach (BasketItem item in _basketItems)
-    {
-        <li>
-            <span>(@item.Quantity) @item.Product.Name | </span>
-            @if (item.Product.Description != "")
+            @if (_products.Count > 0)
             {
-                <span>@item.Product.Description | </span>
-            }
-            <span>@($"£{item.Product.Price.ToString("0.00")}") | </span>
+                <div class="shop-grid">
+                    @foreach (Product product in _products)
+                    {
+                        <div class="shop-item">
+                            <p>
+                                <span class="name">@product.Name</span>
+                                <span class="price">@($"£{product.Price.ToString("0.00")}")</span>
+                            </p>
+                            @if (product.Description != "")
+                            {
+                                <p class="desc">@product.Description</p>
+                            }
 
-            @if (item.Quantity < 2)
-            {
-                <button @onclick="() => RemoveFromBasket(item)">Remove</button>
+                            <button class="button blue" @onclick="() => AddToBasket(product)">Add To Basket</button>
+                        </div>
+                    }
+                </div>
+
+                <label for="add-amount">Amount to add: </label> <input type="number" id="add-amount"
+                @bind-value="_newItemAmount" min="1">
             }
             else
             {
-                <button @onclick="() => RemoveFromBasket(item)">Remove All</button>
-
-                <button @onclick="() => RemoveAmount(item, item.RemoveAmount)">Remove </button>
-                <input type="number" min="1" max="@item.Quantity" @bind-value="item.RemoveAmount">
+                <p>No products found. Maybe try searching for something else?</p>
             }
-        </li>
-    }
-</ul>
+        </div>
+
+        <div class="basket @_basketCss">
+            <h1>Basket</h1>
+
+            <p>Total price: @_basket.TotalPrice</p>
+
+            <ul>
+                @foreach (BasketItem item in _basketItems)
+                {
+                    <li>
+                        <span>(@item.Quantity) @item.Product.Name | </span>
+                        @if (item.Product.Description != "")
+                        {
+                            <span>@item.Product.Description | </span>
+                        }
+                        <span>@($"£{item.Product.Price.ToString("0.00")}") | </span>
+
+                        @if (item.Quantity < 2)
+                        {
+                            <button @onclick="() => RemoveFromBasket(item)">Remove</button>
+                        }
+                        else
+                        {
+                            <button @onclick="() => RemoveFromBasket(item)">Remove All</button>
+
+                            <button @onclick="() => RemoveAmount(item, item.RemoveAmount)">Remove </button>
+                            <input type="number" min="1" max="@item.Quantity" @bind-value="item.RemoveAmount">
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+
+</main>
