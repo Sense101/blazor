@@ -17,30 +17,30 @@
         }
     }
 
+    .title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        h1 {
+            display: inline;
+
+            font-weight: bold;
+            color: #4992ff;
+        }
+        span {
+            margin-left: 10px;
+        }
+
+        border-bottom: solid 3px #e9e9e9;
+    }
+
     .page {
         display: flex;
 
         .center {
             padding: 1.5rem;
             flex-grow: 1;
-
-            .title {
-                display: flex;
-                align-items: center;
-                margin-bottom: 0.5rem;
-
-                h1 {
-                    display: inline;
-
-                    font-weight: bold;
-                    color: #4992ff;
-                }
-                span {
-                    margin-left: 10px;
-                }
-
-                border-bottom: solid 3px #e9e9e9;
-            }
 
             .shop-grid {
                 display: flex;
@@ -77,20 +77,67 @@
         }
 
         .basket {
-            margin-left: 0.5px;
             padding: 1.5rem;
 
             &.hidden {
                 * {
+                    margin: 0;
                     width: 0;
                     font-size: 0;
                     padding: 0;
                     border: none;
+                    background: none;
+                    height: 0;
                 }
             }
 
             &:not(.hidden) {
-                width: 15rem;
+                margin-left: 0.5px;
+                min-width: 25rem;
+            }
+
+            .basket-items {
+                .basket-item {
+                    background: #f7f7f7;
+                    padding: 0.25rem;
+                    margin: 0.5rem 0;
+                    border-radius: 5px;
+
+                    p {
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .title {
+                        display: flex;
+                        justify-content: space-between;
+
+                        .name {
+                            font-weight: bold;
+                        }
+                    }
+
+                    .button {
+                        display: flex;
+                        align-items: center;
+
+                        button {
+                            flex-grow: 1;
+                            color: white;
+                            background: none;
+                            border: none;
+                        }
+                        input[type="number"] {
+                            border-radius: 5px;
+                            border: none;
+                            font-size: 0.9rem;
+                            margin-right: 0.2rem;
+
+                            &:active {
+                                border: none;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

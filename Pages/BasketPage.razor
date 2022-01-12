@@ -55,35 +55,34 @@
         </div>
 
         <div class="basket @_basketCss">
-            <h1>Basket</h1>
+            <div class="title">
+                <h1>Your Basket</h1>
+            </div>
 
             <p>Total price: @_basket.TotalPrice</p>
 
-            <ul>
+            <div class="basket-items">
                 @foreach (BasketItem item in _basketItems)
                 {
-                    <li>
-                        <span>(@item.Quantity) @item.Product.Name | </span>
+                    <div class="basket-item">
+                        <p class="title">
+                            <span class="name">@item.Product.Name</span>
+                            <span>@($"£{item.Product.Price.ToString("0.00")}")</span>
+                            <span>@item.Quantity</span>
+                        </p>
+
                         @if (item.Product.Description != "")
                         {
-                            <span>@item.Product.Description | </span>
+                            <p class="desc">@item.Product.Description</p>
                         }
-                        <span>@($"£{item.Product.Price.ToString("0.00")}") | </span>
 
-                        @if (item.Quantity < 2)
-                        {
-                            <button @onclick="() => RemoveFromBasket(item)">Remove</button>
-                        }
-                        else
-                        {
-                            <button @onclick="() => RemoveFromBasket(item)">Remove All</button>
-
+                        <div class="button blue">
                             <button @onclick="() => RemoveAmount(item, item.RemoveAmount)">Remove </button>
                             <input type="number" min="1" max="@item.Quantity" @bind-value="item.RemoveAmount">
-                        }
-                    </li>
+                        </div>
+                    </div>
                 }
-            </ul>
+            </div>
         </div>
     </div>
 
