@@ -73,8 +73,11 @@ a,
     color: white;
     border: 1px solid #4992ff;
     border-radius: 5px;
+
+    transition: opacity 0.5s;
 }
 
 .button.blue:hover {
     border-color: rgb(95, 95, 255);
+    opacity: 80%;
 }

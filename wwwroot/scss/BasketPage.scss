@@ -84,7 +84,7 @@
                     margin: 0;
                     width: 0;
                     font-size: 0;
-                    padding: 0;
+                    padding: 0 !important;
                     border: none;
                     background: none;
                     height: 0;
@@ -93,7 +93,8 @@
 
             &:not(.hidden) {
                 margin-left: 0.5px;
-                min-width: 25rem;
+                min-width: 15rem;
+                max-width: 20rem;
             }
 
             .basket-items {
