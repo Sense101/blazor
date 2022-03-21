@@ -1,6 +1,8 @@
 .vscode/
 *.config
 *.editorconfig
+*.db-shm
+*.db-wal
 
 # Build results
 [Dd]ebug/
