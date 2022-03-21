@@ -1,9 +1,9 @@
 {
 	"folders": [
-		{
-			"path": "."
-		}
-	],
+        {
+            "path": "."
+        }
+    ],
     "settings": {
         "editor.formatOnSave": true,
         "explorer.compactFolders": false
